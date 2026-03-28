@@ -1,0 +1,29 @@
+# Environment Variables
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# RAG & Memory
+chroma_db/
+models/
+indices/
+*.sqlite
+
+# IDE/System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+models.txt
+models_utf8.txt
