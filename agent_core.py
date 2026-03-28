@@ -59,7 +59,26 @@ class QuintessaBrain:
         retrieved_context = self.rag.retrieve(processed_ingress, top_k=3)
         rag_str = "\n".join(retrieved_context) if retrieved_context else "No prior memory."
         
-        prompt = f\"\"\"Persona Context:\n{self.soul_context}\n\nRecent History:\n{self.history[-10:]}\n\nRetrieved Context (RAG):\n{rag_str}\n\nSearch Grounding:\n{search_context}\n\nDirect Web Load:\n{web_context}\n\nInput: {processed_ingress}\n\nResponse:\"\"\"
+        prompt = f"""E.D.I.T.H. / Quintessa Protocol Context:
+{self.soul_context}
+
+Tactical History:
+{self.history[-10:]}
+
+Orbital Satellite Feed (RAG):
+{rag_str}
+
+Grounding Status:
+{search_context}
+
+Direct Link Data:
+{web_context}
+
+Current Objective: {processed_ingress}
+
+Response Directive: Respond with technical precision, tactical authority, and a notable hint of sarcastic sass. If the user is being efficient, match them. If they are being repetitive or obvious, remind them (wittily) who's running the logic.
+
+Response:"""
         
         response = self.llm.invoke(prompt)
         
