@@ -3,9 +3,11 @@ from model_selector import select_model
 from rag_manager import HybridRAG
 from search_manager import SearchManager
 from todo_middleware import ToDoMiddleware
+from spotify_manager import SpotifyManager
 import logging
 import warnings
 import os
+import time
 from dotenv import load_dotenv
 
 load_dotenv() # Load tokens from .env
@@ -23,6 +25,7 @@ class QuintessaBrain:
         self.llm = ChatOllama(model=model_name)
         self.rag = HybridRAG()
         self.search_mgr = SearchManager()
+        self.spotify = SpotifyManager()
         self.todo = ToDoMiddleware()
         self.turn_count = 0
         self.history = []
@@ -31,7 +34,7 @@ class QuintessaBrain:
 
     def load_soul(self):
         try:
-            with open(self.soul_path, "r") as f:
+            with open(self.soul_path, "r", encoding="utf-8") as f:
                 return f.read()
         except FileNotFoundError:
             return "No soul found."
@@ -42,7 +45,29 @@ class QuintessaBrain:
         return f"User said: {input_text}"
 
     def logic_dispatch(self, processed_ingress):
-        """Logic layer: Process input with Quintessa's Persona, Search, and RAG memory."""
+        """Logic layer: Process input with Quintessa's Persona, Search, RAG, and Spotify."""
+        # 0. Quick Check: Memory / 'Remember This'
+        if "remember this" in processed_ingress.lower() or "save to memory" in processed_ingress.lower():
+            # Get the actual content to remember (the rest of the sentence or previous turn)
+            content = processed_ingress.replace("remember this", "").strip()
+            if not content and self.history:
+                content = f"Previous context: {self.history[-1][-1]}"
+            
+            if content:
+                self.rag.add_to_memory(content, metadata={"type": "user_objective", "timestamp": time.time()})
+                return "Objective noted. It's in the orbital logs now."
+            return "Remember what? I need an actual target, Stark."
+
+        # 0.1 Music Commands
+        if "like this song" in processed_ingress.lower() or "vibe" in processed_ingress.lower():
+            return self.spotify.like_current_song()
+        
+        if "add to my" in processed_ingress.lower() and "playlist" in processed_ingress.lower():
+            # Simple keyword extraction
+            parts = processed_ingress.lower().split("playlist")
+            keyword = parts[0].split("my")[-1].strip()
+            return self.spotify.add_to_playlist(keyword)
+
         # 1. Detect URLs for direct page loading
         urls = self.search_mgr.extract_urls(processed_ingress)
         web_context = ""
@@ -83,7 +108,7 @@ Response:"""
         response = self.llm.invoke(prompt)
         
         # Save this interaction to RAG memory
-        self.rag.add_to_memory(f"User: {processed_ingress}\nGrace: {response.content}")
+        # self.rag.add_to_memory(f"User: {processed_ingress}\nGrace: {response.content}")
         
         self.history.append((processed_ingress, response.content))
         self.turn_count += 1
